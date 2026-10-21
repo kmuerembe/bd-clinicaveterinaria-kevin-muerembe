@@ -64,7 +64,7 @@ Armazena o catálogo oficial de atos médicos, vacinas, meios complementares de 
 | `nome` | `VARCHAR(100)` | `NOT NULL`, `UNIQUE` | Designação oficial única do ato clínico |
 | `categoria` | `VARCHAR(50)` | `NOT NULL` | Categoria clínica (Vacinação, Cirurgia, Diagnóstico, Preventivo) |
 | `descricao` | `TEXT` | `NOT NULL` | Descrição técnica detalhada do procedimento |
-| `preco_base` | `DECIMAL(8,2)` | `NOT NULL` | Preço unitário de tabela em euros |
+| `preco_base` | `DECIMAL(8,2)` | `NOT NULL` | Preço unitário de tabela em meticais moçambicanos (MZN) |
 | `duracao_minutos` | `INT` | `NOT NULL` | Duração média estimada em minutos |
 
 - **Chave Primária (PK):** `pk_tratamento (id_tratamento)`
@@ -107,7 +107,7 @@ Regista todos os atos de consulta agendados, concluídos ou cancelados, associan
 | `motivo` | `VARCHAR(150)` | `NOT NULL` | Queixa principal ou motivo do agendamento |
 | `diagnostico` | `TEXT` | `NULL` | Diagnóstico clínico (preenchido após realização; nulo enquanto agendada/cancelada) |
 | `estado` | `VARCHAR(20)` | `NOT NULL` | Estado atual (`Agendada`, `Concluída`, `Cancelada`) |
-| `valor_consulta` | `DECIMAL(8,2)` | `NOT NULL` | Taxa base do ato de consulta médica em euros |
+| `valor_consulta` | `DECIMAL(8,2)` | `NOT NULL` | Taxa base do ato de consulta médica em meticais moçambicanos (MZN) |
 | `id_animal` | `INT` | `NOT NULL`, `FOREIGN KEY` | Referência ao animal atendido na tabela `ANIMAL` |
 | `id_veterinario` | `INT` | `NOT NULL`, `FOREIGN KEY` | Referência ao médico responsável na tabela `VETERINARIO` |
 
@@ -128,7 +128,7 @@ Materializa a relação `N:N` entre `CONSULTA` e `TRATAMENTO`. É uma **entidade
 | `id_consulta` | `INT` | `PRIMARY KEY`, `FOREIGN KEY`, `NOT NULL` | Identificador da consulta a que pertence o item |
 | `id_tratamento` | `INT` | `PRIMARY KEY`, `FOREIGN KEY`, `NOT NULL` | Identificador do tratamento aplicado |
 | `quantidade` | `INT` | `NOT NULL` | Número de unidades/doses aplicadas na consulta |
-| `preco_aplicado` | `DECIMAL(8,2)` | `NOT NULL` | Preço unitário efetivamente praticado na data da consulta |
+| `preco_aplicado` | `DECIMAL(8,2)` | `NOT NULL` | Preço unitário efetivamente praticado na data da consulta, em meticais moçambicanos (MZN) |
 | `observacoes` | `TEXT` | `NULL` | Posologia, lote vacinal ou observações clínicas específicas |
 
 - **Chave Primária Composta (PK):** `pk_consulta_tratamento (id_consulta, id_tratamento)`
