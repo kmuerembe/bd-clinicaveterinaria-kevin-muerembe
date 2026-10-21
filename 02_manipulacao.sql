@@ -38,12 +38,12 @@ ORDER BY peso_kg DESC;
 
 
 -- -------------------------------------------------------------------------
--- COMANDO 2: SELECT SIMPLES #2 — Tratamentos com preço base igual ou superior a 50 €
+-- COMANDO 2: SELECT SIMPLES #2 — Tratamentos com preço base igual ou superior a 50 MZN
 -- -------------------------------------------------------------------------
 -- RESULTADO ESPERADO: Devolve 9 registos da tabela TRATAMENTO cujo preço base
--- é igual ou superior a 50.00 €, ordenados do mais económico para o mais caro,
--- começando em 'Sessão de Acupuntura Veterinária' (52.00 €) até
--- 'Esterilização Felina (Ovariohisterectomia)' (145.00 €).
+-- é igual ou superior a 50.00 MZN, ordenados do mais económico para o mais caro,
+-- começando em 'Sessão de Acupuntura Veterinária' (52.00 MZN) até
+-- 'Esterilização Felina (Ovariohisterectomia)' (145.00 MZN).
 -- EXPLICAÇÃO: Seleciona os procedimentos clínicos de maior valor na tabela
 -- TRATAMENTO recorrendo ao operador relacional >= na cláusula WHERE e ordena
 -- o catálogo por ordem crescente de preco_base (ASC).
@@ -122,7 +122,7 @@ ORDER BY c.data_hora DESC;
 -- CONSULTA_TRATAMENTO enriquecidos com a data da consulta, o nome do animal,
 -- o nome e categoria do tratamento, a quantidade, o preço unitário aplicado e
 -- o subtotal calculado (quantidade * preco_aplicado), ordenados do maior
--- subtotal (145.00 €) para o menor (16.50 €).
+-- subtotal (145.00 MZN) para o menor (16.50 MZN).
 -- EXPLICAÇÃO: Combina CONSULTA_TRATAMENTO com CONSULTA, ANIMAL e TRATAMENTO
 -- através de INNER JOIN e calcula dinamicamente o subtotal de cada linha de
 -- tratamento com a expressão aritmética ROUND(ct.quantidade * ct.preco_aplicado, 2).
@@ -168,9 +168,9 @@ WHERE id_consulta = 17;
 -- COMANDO 7: UPDATE #2 — Atualizar o preço de tabela de um tratamento
 -- -------------------------------------------------------------------------
 -- RESULTADO ESPERADO: 1 linha afetada (1 row affected). O tratamento com
--- id_tratamento = 1 ('Vacina Polivalente Canina') passa de preco_base = 38.00 €
--- para preco_base = 41.50 €, mantendo intacto o histórico de preco_aplicado
--- (38.00 €) nas consultas já realizadas em CONSULTA_TRATAMENTO.
+-- id_tratamento = 1 ('Vacina Polivalente Canina') passa de preco_base = 38.00 MZN
+-- para preco_base = 41.50 MZN, mantendo intacto o histórico de preco_aplicado
+-- (38.00 MZN) nas consultas já realizadas em CONSULTA_TRATAMENTO.
 -- EXPLICAÇÃO: Altera o valor de catálogo na tabela TRATAMENTO usando a chave
 -- primária (WHERE id_tratamento = 1), demonstrando também a vantagem de guardar
 -- preco_aplicado na entidade associativa para preservar o histórico contabilístico.
