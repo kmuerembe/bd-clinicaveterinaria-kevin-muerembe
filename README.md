@@ -7,7 +7,7 @@
 - **Disciplina:** Tecnologias de Base de Dados
 - **SGBD:** MySQL 8 (Motor InnoDB)
 - **Repositório GitHub:** `bd-clinicaveterinaria-kevin-muerembe`
-- **Link da Apresentação em Vídeo:** [LINK-VIDEO]
+- **Link da Apresentação em Vídeo:** [https://youtu.be/s9OCBo_masc?si=-XYJt_kgVYL_xjfK]
 
 ---
 
