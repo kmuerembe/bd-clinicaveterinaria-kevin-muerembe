@@ -1,192 +1,218 @@
 # Modelo Relacional — Clínica Veterinária (`clinica_vet`)
 
-## 1. Notação Textual das Relações
+## 1. Notação textual das relações
 
-- `DONO(id_dono PK, nome, nif UNIQUE, telefone, email UNIQUE, morada, data_registo)`
-- `VETERINARIO(id_veterinario PK, nome, nif UNIQUE, cedula_profissional UNIQUE, especialidade, telefone, email UNIQUE, data_contratacao)`
+- `DONO(id_dono PK, nome, nuit UNIQUE, telefone, email UNIQUE, morada, data_registo)`
+- `VETERINARIO(id_veterinario PK, nome, nuit UNIQUE, numero_registo_profissional UNIQUE, especialidade, telefone, email UNIQUE, data_contratacao)`
 - `TRATAMENTO(id_tratamento PK, nome UNIQUE, categoria, descricao, preco_base, duracao_minutos)`
 - `ANIMAL(id_animal PK, nome, especie, raca, sexo, data_nascimento, peso_kg, microchip UNIQUE, id_dono FK -> DONO.id_dono)`
 - `CONSULTA(id_consulta PK, data_hora, motivo, diagnostico, estado, valor_consulta, id_animal FK -> ANIMAL.id_animal, id_veterinario FK -> VETERINARIO.id_veterinario)`
-- `CONSULTA_TRATAMENTO(id_consulta PK FK -> CONSULTA.id_consulta, id_tratamento PK FK -> TRATAMENTO.id_tratamento, quantidade, preco_aplicado, observacoes)`
+- `CONSULTA_TRATAMENTO(id_consulta PK/FK -> CONSULTA.id_consulta, id_tratamento PK/FK -> TRATAMENTO.id_tratamento, quantidade, preco_aplicado, observacoes)`
+- `VACINACAO(id_animal PK/FK -> ANIMAL.id_animal, numero_dose PK, data_aplicacao, vacina, lote, id_veterinario FK -> VETERINARIO.id_veterinario)`
+- `UTILIZADOR(id_utilizador PK, email UNIQUE, password_hash, perfil, id_dono UNIQUE/FK -> DONO.id_dono, id_veterinario UNIQUE/FK -> VETERINARIO.id_veterinario, ativo, ultimo_login)`
 
----
+> Tipos e restrições abaixo reproduzem a definição de `CREATE TABLE` no ficheiro `01_criacao_e_insercao.sql`. Nas colunas sem `NOT NULL` explícito, a coluna permite `NULL`.
 
-## 2. Dicionário e Estrutura Detalhada das Tabelas
+## 2. Dicionário de dados
 
-### 2.1 Tabela `DONO` (Entidade Forte)
+### 2.1 `DONO` — entidade forte
+Dados de identificação e contacto dos donos dos animais.
 
-Armazena os dados de identificação fiscal, contacto e morada dos proprietários dos animais registados na clínica.
+| Coluna | Tipo | Restrições | Descrição |
+|---|---|---|---|
+| `id_dono` | `INT AUTO_INCREMENT` | PK, NOT NULL | Identificador sequencial do dono. |
+| `nome` | `VARCHAR(100)` | NOT NULL | Nome do dono. |
+| `nuit` | `VARCHAR(9)` | NOT NULL, UNIQUE, CHECK `ck_dono_nuit` | NUIT com nove algarismos. |
+| `telefone` | `VARCHAR(20)` | NOT NULL, CHECK `ck_dono_telefone` | Contacto no formato moçambicano definido pelo CHECK. |
+| `email` | `VARCHAR(100)` | NOT NULL, UNIQUE | Endereço de correio electrónico. |
+| `morada` | `VARCHAR(150)` | NOT NULL | Morada do dono. |
+| `data_registo` | `DATE` | NOT NULL | Data de registo na clínica. |
 
-| Coluna | Tipo de Dados | Restrições | Descrição |
-| :--- | :--- | :--- | :--- |
-| `id_dono` | `INT AUTO_INCREMENT` | `PRIMARY KEY`, `NOT NULL` | Identificador único sequencial do dono |
-| `nome` | `VARCHAR(100)` | `NOT NULL` | Nome completo do proprietário |
-| `nif` | `VARCHAR(9)` | `NOT NULL`, `UNIQUE` | Número de Identificação Fiscal (9 dígitos únicos) |
-| `telefone` | `VARCHAR(15)` | `NOT NULL` | Contacto telefónico principal |
-| `email` | `VARCHAR(100)` | `NOT NULL`, `UNIQUE` | Endereço de correio eletrónico único (acesso ao portal web) |
-| `morada` | `VARCHAR(150)` | `NOT NULL` | Morada completa do proprietário |
-| `data_registo` | `DATE` | `NOT NULL` | Data de inscrição do cliente na clínica |
+PK: `pk_dono (id_dono)`. UNIQUE: `uq_dono_nuit (nuit)`, `uq_dono_email (email)`. FK: nenhuma.
 
-- **Chave Primária (PK):** `pk_dono (id_dono)`
-- **Chaves Únicas (UNIQUE):** `uq_dono_nif (nif)`, `uq_dono_email (email)`
-- **Chaves Estrangeiras (FK):** Nenhuma
+### 2.2 `VETERINARIO` — entidade forte
+Dados dos médicos veterinários e do seu registo profissional.
 
----
+| Coluna | Tipo | Restrições | Descrição |
+|---|---|---|---|
+| `id_veterinario` | `INT AUTO_INCREMENT` | PK, NOT NULL | Identificador sequencial do veterinário. |
+| `nome` | `VARCHAR(100)` | NOT NULL | Nome do veterinário. |
+| `nuit` | `VARCHAR(9)` | NOT NULL, UNIQUE, CHECK `ck_veterinario_nuit` | NUIT com nove algarismos. |
+| `numero_registo_profissional` | `VARCHAR(20)` | NOT NULL, UNIQUE | Número de registo profissional. |
+| `especialidade` | `VARCHAR(60)` | NOT NULL | Área de especialização. |
+| `telefone` | `VARCHAR(20)` | NOT NULL, CHECK `ck_veterinario_telefone` | Contacto no formato moçambicano definido pelo CHECK. |
+| `email` | `VARCHAR(100)` | NOT NULL, UNIQUE | Endereço de correio electrónico. |
+| `data_contratacao` | `DATE` | NOT NULL | Data de contratação. |
 
-### 2.2 Tabela `VETERINARIO` (Entidade Forte)
+PK: `pk_veterinario (id_veterinario)`. UNIQUE: `uq_veterinario_nuit (nuit)`, `uq_veterinario_registo (numero_registo_profissional)`, `uq_veterinario_email (email)`. FK: nenhuma.
 
-Armazena o corpo clínico da clínica veterinária, incluindo cédula profissional da Ordem dos Médicos Veterinários (OMV) e área de especialização.
+### 2.3 `TRATAMENTO` — entidade forte
+Catálogo de actos médicos, vacinas, exames e cirurgias.
 
-| Coluna | Tipo de Dados | Restrições | Descrição |
-| :--- | :--- | :--- | :--- |
-| `id_veterinario` | `INT AUTO_INCREMENT` | `PRIMARY KEY`, `NOT NULL` | Identificador único sequencial do médico veterinário |
-| `nome` | `VARCHAR(100)` | `NOT NULL` | Nome completo do médico veterinário |
-| `nif` | `VARCHAR(9)` | `NOT NULL`, `UNIQUE` | Número de Identificação Fiscal (9 dígitos únicos) |
-| `cedula_profissional` | `VARCHAR(15)` | `NOT NULL`, `UNIQUE` | Número da cédula profissional emitida pela OMV |
-| `especialidade` | `VARCHAR(60)` | `NOT NULL` | Área clínica de especialidade médica |
-| `telefone` | `VARCHAR(15)` | `NOT NULL` | Contacto telefónico profissional |
-| `email` | `VARCHAR(100)` | `NOT NULL`, `UNIQUE` | Correio eletrónico institucional do médico veterinário |
-| `data_contratacao` | `DATE` | `NOT NULL` | Data de entrada ao serviço na clínica |
+| Coluna | Tipo | Restrições | Descrição |
+|---|---|---|---|
+| `id_tratamento` | `INT AUTO_INCREMENT` | PK, NOT NULL | Identificador sequencial do tratamento. |
+| `nome` | `VARCHAR(100)` | NOT NULL, UNIQUE | Designação do tratamento. |
+| `categoria` | `VARCHAR(50)` | NOT NULL | Categoria do acto clínico. |
+| `descricao` | `TEXT` | NOT NULL | Descrição do procedimento. |
+| `preco_base` | `DECIMAL(8,2)` | NOT NULL, CHECK `ck_tratamento_preco_base` | Preço de base em meticais (MZN). |
+| `duracao_minutos` | `INT` | NOT NULL, CHECK `ck_tratamento_duracao` | Duração estimada em minutos. |
 
-- **Chave Primária (PK):** `pk_veterinario (id_veterinario)`
-- **Chaves Únicas (UNIQUE):** `uq_veterinario_nif (nif)`, `uq_veterinario_cedula (cedula_profissional)`, `uq_veterinario_email (email)`
-- **Chaves Estrangeiras (FK):** Nenhuma
+PK: `pk_tratamento (id_tratamento)`. UNIQUE: `uq_tratamento_nome (nome)`. FK: nenhuma.
 
----
+### 2.4 `ANIMAL` — entidade forte
+Regista os animais acompanhados, cada qual associado obrigatoriamente a um dono.
 
-### 2.3 Tabela `TRATAMENTO` (Entidade Forte)
+| Coluna | Tipo | Restrições | Descrição |
+|---|---|---|---|
+| `id_animal` | `INT AUTO_INCREMENT` | PK, NOT NULL | Identificador sequencial do animal. |
+| `nome` | `VARCHAR(60)` | NOT NULL | Nome do animal. |
+| `especie` | `VARCHAR(40)` | NOT NULL | Espécie do animal. |
+| `raca` | `VARCHAR(60)` | NOT NULL | Raça ou variedade. |
+| `sexo` | `VARCHAR(10)` | NOT NULL, CHECK `ck_animal_sexo` | Sexo: `Macho` ou `Fêmea`. |
+| `data_nascimento` | `DATE` | NOT NULL | Data de nascimento, real ou estimada. |
+| `peso_kg` | `DECIMAL(8,2)` | NOT NULL, CHECK `ck_animal_peso` | Peso em quilogramas, superior a zero. |
+| `microchip` | `VARCHAR(15)` | NULL, UNIQUE | Código do microchip; pode ser nulo. |
+| `id_dono` | `INT` | NOT NULL, FK `fk_animal_dono` | Dono a quem o animal está associado. |
 
-Armazena o catálogo oficial de atos médicos, vacinas, meios complementares de diagnóstico, cirurgias e terapias praticados pela clínica.
+PK: `pk_animal (id_animal)`. UNIQUE: `uq_animal_microchip (microchip)`. FK: `fk_animal_dono`.
 
-| Coluna | Tipo de Dados | Restrições | Descrição |
-| :--- | :--- | :--- | :--- |
-| `id_tratamento` | `INT AUTO_INCREMENT` | `PRIMARY KEY`, `NOT NULL` | Identificador único sequencial do tratamento |
-| `nome` | `VARCHAR(100)` | `NOT NULL`, `UNIQUE` | Designação oficial única do ato clínico |
-| `categoria` | `VARCHAR(50)` | `NOT NULL` | Categoria clínica (Vacinação, Cirurgia, Diagnóstico, Preventivo) |
-| `descricao` | `TEXT` | `NOT NULL` | Descrição técnica detalhada do procedimento |
-| `preco_base` | `DECIMAL(8,2)` | `NOT NULL` | Preço unitário de tabela em meticais moçambicanos (MZN) |
-| `duracao_minutos` | `INT` | `NOT NULL` | Duração média estimada em minutos |
+### 2.5 `CONSULTA` — entidade forte
+Regista o atendimento de um animal por um veterinário.
 
-- **Chave Primária (PK):** `pk_tratamento (id_tratamento)`
-- **Chaves Únicas (UNIQUE):** `uq_tratamento_nome (nome)`
-- **Chaves Estrangeiras (FK):** Nenhuma
+| Coluna | Tipo | Restrições | Descrição |
+|---|---|---|---|
+| `id_consulta` | `INT AUTO_INCREMENT` | PK, NOT NULL | Identificador sequencial da consulta. |
+| `data_hora` | `DATETIME` | NOT NULL | Data e hora do atendimento. |
+| `motivo` | `VARCHAR(150)` | NOT NULL | Motivo da consulta. |
+| `diagnostico` | `TEXT` | NULL | Diagnóstico; pode ficar por preencher. |
+| `estado` | `VARCHAR(20)` | NOT NULL, CHECK `ck_consulta_estado` | Estado: `Agendada`, `Concluída` ou `Cancelada`. |
+| `valor_consulta` | `DECIMAL(8,2)` | NOT NULL, CHECK `ck_consulta_valor` | Valor da consulta em MZN. |
+| `id_animal` | `INT` | NOT NULL, FK `fk_consulta_animal` | Animal atendido. |
+| `id_veterinario` | `INT` | NOT NULL, FK `fk_consulta_veterinario` | Veterinário responsável. |
 
----
+PK: `pk_consulta (id_consulta)`. UNIQUE: nenhuma. FKs: `fk_consulta_animal`, `fk_consulta_veterinario`.
 
-### 2.4 Tabela `ANIMAL` (Entidade Forte)
+### 2.6 `CONSULTA_TRATAMENTO` — entidade associativa
+Resolve a relação muitos-para-muitos (N:N) entre `CONSULTA` e `TRATAMENTO`, guardando ainda atributos próprios da aplicação do tratamento.
 
-Armazena os animais de companhia acompanhados na clínica, garantindo que cada paciente pertence obrigatoriamente a um único proprietário registado.
+| Coluna | Tipo | Restrições | Descrição |
+|---|---|---|---|
+| `id_consulta` | `INT` | NOT NULL, PK composta, FK `fk_ct_consulta` | Consulta a que pertence o tratamento. |
+| `id_tratamento` | `INT` | NOT NULL, PK composta, FK `fk_ct_tratamento` | Tratamento aplicado na consulta. |
+| `quantidade` | `INT` | NOT NULL, CHECK `ck_ct_quantidade` | Quantidade aplicada, superior a zero. |
+| `preco_aplicado` | `DECIMAL(8,2)` | NOT NULL, CHECK `ck_ct_preco_aplicado` | Preço praticado em MZN. |
+| `observacoes` | `TEXT` | NULL | Observações clínicas ou de aplicação. |
 
-| Coluna | Tipo de Dados | Restrições | Descrição |
-| :--- | :--- | :--- | :--- |
-| `id_animal` | `INT AUTO_INCREMENT` | `PRIMARY KEY`, `NOT NULL` | Identificador único sequencial do animal |
-| `nome` | `VARCHAR(60)` | `NOT NULL` | Nome próprio do animal |
-| `especie` | `VARCHAR(40)` | `NOT NULL` | Espécie biológica (Cão, Gato, Coelho, Ave, Tartaruga, Hamster) |
-| `raca` | `VARCHAR(60)` | `NOT NULL` | Raça ou variedade do animal |
-| `sexo` | `VARCHAR(10)` | `NOT NULL` | Sexo biológico (`Macho` ou `Fêmea`) |
-| `data_nascimento` | `DATE` | `NOT NULL` | Data de nascimento (real ou estimada clinicamente) |
-| `peso_kg` | `DECIMAL(8,2)` | `NOT NULL` | Peso corporal atual expresso em quilogramas |
-| `microchip` | `VARCHAR(15)` | `UNIQUE` | Código eletrónico ISO de 15 dígitos (opcional em exóticos de pequeno porte) |
-| `id_dono` | `INT` | `NOT NULL`, `FOREIGN KEY` | Referência ao proprietário na tabela `DONO` |
+PK composta: `pk_consulta_tratamento (id_consulta, id_tratamento)`; esta chave também assegura unicidade do par. FKs: `fk_ct_consulta`, `fk_ct_tratamento`.
 
-- **Chave Primária (PK):** `pk_animal (id_animal)`
-- **Chaves Únicas (UNIQUE):** `uq_animal_microchip (microchip)`
-- **Chaves Estrangeiras (FK):**
-  - `fk_animal_dono`: `id_dono` referencia `DONO(id_dono)` com `ON UPDATE CASCADE` e `ON DELETE RESTRICT`
+### 2.7 `VACINACAO` — entidade fraca
+Regista doses administradas a um animal. A identificação de cada dose é local ao animal: a chave é composta pela chave de `ANIMAL` e pela chave parcial `numero_dose`.
 
----
+| Coluna | Tipo | Restrições | Descrição |
+|---|---|---|---|
+| `id_animal` | `INT` | NOT NULL, parte da PK, FK `fk_vacinacao_animal` | Animal cujo boletim vacinal recebe a dose. |
+| `numero_dose` | `INT` | NOT NULL, parte da PK, CHECK `ck_vacinacao_dose` | Número de ordem da dose no plano vacinal do animal. |
+| `data_aplicacao` | `DATE` | NOT NULL | Data em que a vacina foi administrada. |
+| `vacina` | `VARCHAR(100)` | NOT NULL | Designação da vacina aplicada. |
+| `lote` | `VARCHAR(20)` | NOT NULL | Lote para rastreabilidade. |
+| `id_veterinario` | `INT` | NOT NULL, FK `fk_vacinacao_veterinario` | Veterinário responsável pela administração. |
 
-### 2.5 Tabela `CONSULTA` (Entidade Forte)
+PK composta: `pk_vacinacao (id_animal, numero_dose)`. `numero_dose` é a chave parcial, pois só distingue doses dentro do conjunto de doses de um animal. A participação de `VACINACAO` no relacionamento identificador com `ANIMAL` é total: cada vacinação tem de pertencer a um animal. A participação de `ANIMAL` é parcial, pois pode haver animais sem registo de vacinação.
 
-Regista todos os atos de consulta agendados, concluídos ou cancelados, associando o animal atendido ao médico veterinário responsável.
+**Porque é entidade fraca:** não tem identidade autónoma e uma dose não pode ser identificada apenas pelo seu número; é necessário conhecer o animal. O relacionamento com `ANIMAL` é identificador, e `ON DELETE CASCADE` garante que a eliminação do animal elimina o boletim vacinal dependente. Assim, `VACINACAO` não existe sem o animal a que pertence.
 
-| Coluna | Tipo de Dados | Restrições | Descrição |
-| :--- | :--- | :--- | :--- |
-| `id_consulta` | `INT AUTO_INCREMENT` | `PRIMARY KEY`, `NOT NULL` | Identificador único sequencial da consulta |
-| `data_hora` | `DATETIME` | `NOT NULL` | Data e hora marcadas ou realizadas da consulta |
-| `motivo` | `VARCHAR(150)` | `NOT NULL` | Queixa principal ou motivo do agendamento |
-| `diagnostico` | `TEXT` | `NULL` | Diagnóstico clínico (preenchido após realização; nulo enquanto agendada/cancelada) |
-| `estado` | `VARCHAR(20)` | `NOT NULL` | Estado atual (`Agendada`, `Concluída`, `Cancelada`) |
-| `valor_consulta` | `DECIMAL(8,2)` | `NOT NULL` | Taxa base do ato de consulta médica em meticais moçambicanos (MZN) |
-| `id_animal` | `INT` | `NOT NULL`, `FOREIGN KEY` | Referência ao animal atendido na tabela `ANIMAL` |
-| `id_veterinario` | `INT` | `NOT NULL`, `FOREIGN KEY` | Referência ao médico responsável na tabela `VETERINARIO` |
+**Diferença para `CONSULTA_TRATAMENTO`:** `CONSULTA_TRATAMENTO` é uma entidade associativa que decompõe a relação N:N entre consulta e tratamento e regista atributos dessa associação. Embora use uma PK composta por FKs, a sua função conceptual é resolver essa relação N:N; não é a entidade fraca identificadora do modelo. A entidade fraca propriamente dita é `VACINACAO`, cuja identidade parcial depende de `ANIMAL`.
 
-- **Chave Primária (PK):** `pk_consulta (id_consulta)`
-- **Chaves Únicas (UNIQUE):** Nenhuma
-- **Chaves Estrangeiras (FK):**
-  - `fk_consulta_animal`: `id_animal` referencia `ANIMAL(id_animal)` com `ON UPDATE CASCADE` e `ON DELETE RESTRICT`
-  - `fk_consulta_veterinario`: `id_veterinario` referencia `VETERINARIO(id_veterinario)` com `ON UPDATE CASCADE` e `ON DELETE RESTRICT`
+### 2.8 `UTILIZADOR` — entidade forte
+Guarda as contas de acesso da aplicação, associadas opcionalmente a um dono ou veterinário conforme o perfil.
 
----
+| Coluna | Tipo | Restrições | Descrição |
+|---|---|---|---|
+| `id_utilizador` | `INT AUTO_INCREMENT` | PK, NOT NULL | Identificador sequencial da conta. |
+| `email` | `VARCHAR(100)` | NOT NULL, UNIQUE | Identificador de acesso (login). |
+| `password_hash` | `VARCHAR(100)` | NOT NULL | Hash da palavra-passe; nunca deve guardar texto simples. |
+| `perfil` | `VARCHAR(20)` | NOT NULL, CHECK `ck_utilizador_perfil`, CHECK `ck_utilizador_vinculo` | Perfil de acesso permitido e coerência da associação. |
+| `id_dono` | `INT` | NULL, UNIQUE, FK `fk_utilizador_dono`, CHECK `ck_utilizador_vinculo` | Dono associado quando o perfil é `Dono`. |
+| `id_veterinario` | `INT` | NULL, UNIQUE, FK `fk_utilizador_veterinario`, CHECK `ck_utilizador_vinculo` | Veterinário associado quando o perfil é `Veterinario`. |
+| `ativo` | `TINYINT(1)` | NOT NULL, DEFAULT 1, CHECK `ck_utilizador_ativo` | Indicador de conta activa (0 ou 1). |
+| `ultimo_login` | `DATETIME` | NULL | Data e hora do último acesso; nulo se ainda não houve acesso. |
 
-### 2.6 Tabela `CONSULTA_TRATAMENTO` (Entidade Fraca / Associativa)
+PK: `pk_utilizador (id_utilizador)`. UNIQUE: `uq_utilizador_email (email)`, `uq_utilizador_dono (id_dono)`, `uq_utilizador_veterinario (id_veterinario)`. FKs: `fk_utilizador_dono`, `fk_utilizador_veterinario`.
 
-Materializa a relação `N:N` entre `CONSULTA` e `TRATAMENTO`. É uma **entidade fraca/associativa** porque a sua chave primária composta `(id_consulta, id_tratamento)` depende diretamente das chaves primárias das entidades fortes que relaciona, e a sua existência depende da consulta em que o tratamento foi realizado (`ON DELETE CASCADE` em `id_consulta`).
+## 3. Resumo das chaves estrangeiras
 
-| Coluna | Tipo de Dados | Restrições | Descrição |
-| :--- | :--- | :--- | :--- |
-| `id_consulta` | `INT` | `PRIMARY KEY`, `FOREIGN KEY`, `NOT NULL` | Identificador da consulta a que pertence o item |
-| `id_tratamento` | `INT` | `PRIMARY KEY`, `FOREIGN KEY`, `NOT NULL` | Identificador do tratamento aplicado |
-| `quantidade` | `INT` | `NOT NULL` | Número de unidades/doses aplicadas na consulta |
-| `preco_aplicado` | `DECIMAL(8,2)` | `NOT NULL` | Preço unitário efetivamente praticado na data da consulta, em meticais moçambicanos (MZN) |
-| `observacoes` | `TEXT` | `NULL` | Posologia, lote vacinal ou observações clínicas específicas |
+| FK | Origem (coluna) | Referência | ON UPDATE | ON DELETE | Justificação |
+|---|---|---|---|---|---|
+| `fk_animal_dono` | `ANIMAL.id_dono` | `DONO.id_dono` | CASCADE | RESTRICT | Propaga uma alteração de identificador; impede apagar um dono com animais associados. |
+| `fk_consulta_animal` | `CONSULTA.id_animal` | `ANIMAL.id_animal` | CASCADE | RESTRICT | Preserva o histórico clínico e impede apagar animais com consultas. |
+| `fk_consulta_veterinario` | `CONSULTA.id_veterinario` | `VETERINARIO.id_veterinario` | CASCADE | RESTRICT | Preserva a rastreabilidade das consultas do veterinário. |
+| `fk_ct_consulta` | `CONSULTA_TRATAMENTO.id_consulta` | `CONSULTA.id_consulta` | CASCADE | CASCADE | Os itens de tratamento dependem da consulta; ao apagá-la, apagam-se os itens. |
+| `fk_ct_tratamento` | `CONSULTA_TRATAMENTO.id_tratamento` | `TRATAMENTO.id_tratamento` | CASCADE | RESTRICT | Impede retirar do catálogo um tratamento já utilizado no histórico. |
+| `fk_vacinacao_animal` | `VACINACAO.id_animal` | `ANIMAL.id_animal` | CASCADE | CASCADE | Relacionamento identificador: a dose não existe sem o animal; elimina o boletim dependente. |
+| `fk_vacinacao_veterinario` | `VACINACAO.id_veterinario` | `VETERINARIO.id_veterinario` | RESTRICT | RESTRICT | Não altera nem elimina um veterinário referido pelo registo de vacinação. |
+| `fk_utilizador_dono` | `UTILIZADOR.id_dono` | `DONO.id_dono` | RESTRICT (implícito) | RESTRICT (implícito) | Sem acções referenciais explícitas; impede remover dono ainda associado a uma conta. |
+| `fk_utilizador_veterinario` | `UTILIZADOR.id_veterinario` | `VETERINARIO.id_veterinario` | RESTRICT (implícito) | RESTRICT (implícito) | Sem acções referenciais explícitas; impede remover veterinário ainda associado a uma conta. |
 
-- **Chave Primária Composta (PK):** `pk_consulta_tratamento (id_consulta, id_tratamento)`
-- **Chaves Únicas (UNIQUE):** Garantida pela chave primária composta `(id_consulta, id_tratamento)`
-- **Chaves Estrangeiras (FK):**
-  - `fk_ct_consulta`: `id_consulta` referencia `CONSULTA(id_consulta)` com `ON UPDATE CASCADE` e `ON DELETE CASCADE`
-  - `fk_ct_tratamento`: `id_tratamento` referencia `TRATAMENTO(id_tratamento)` com `ON UPDATE CASCADE` e `ON DELETE RESTRICT`
+## 4. Utilizadores e perfis
 
----
+Os perfis permitidos por `ck_utilizador_perfil` são `Administrador`, `Veterinario` e `Dono`. `ck_utilizador_vinculo` garante que: (a) `Dono` tem `id_dono` preenchido e `id_veterinario` nulo; (b) `Veterinario` tem `id_veterinario` preenchido e `id_dono` nulo; (c) `Administrador` tem ambos os vínculos nulos. `ck_utilizador_ativo` restringe `ativo` a 0 ou 1. As restrições UNIQUE sobre `id_dono` e `id_veterinario` limitam cada pessoa a, no máximo, uma conta do respectivo tipo; por serem anuláveis, permitem várias contas administrativas com ambos os vínculos nulos.
 
-## 3. Resumo Global de Chaves e Política de Integridade Referencial
+**Limitação do MySQL:** o esquema usa `id_dono` e `id_veterinario` no `CHECK ck_utilizador_vinculo`. O MySQL proíbe acções referenciais de FK (`CASCADE`, `SET NULL`, `SET DEFAULT`) em colunas usadas por `CHECK` (erro 3823). Por isso, as duas FKs de `UTILIZADOR` não declaram `ON UPDATE` nem `ON DELETE`; no MySQL, a omissão equivale a `RESTRICT`/`NO ACTION`. Para apagar um dono ou veterinário ligado a uma conta, é necessário remover primeiro a associação/conta.
 
-| Tabela Origem (Filha) | Coluna FK | Tabela Destino (Mãe) | Coluna PK | `ON UPDATE` | `ON DELETE` | Justificação da Regra de Negócio |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `ANIMAL` | `id_dono` | `DONO` | `id_dono` | `CASCADE` | `RESTRICT` | Impede eliminar um dono enquanto existirem animais associados à sua ficha |
-| `CONSULTA` | `id_animal` | `ANIMAL` | `id_animal` | `CASCADE` | `RESTRICT` | Protege o historial clínico impedindo apagar animais com consultas registadas |
-| `CONSULTA` | `id_veterinario` | `VETERINARIO` | `id_veterinario` | `CASCADE` | `RESTRICT` | Mantém a rastreabilidade médica das consultas realizadas por cada veterinário |
-| `CONSULTA_TRATAMENTO` | `id_consulta` | `CONSULTA` | `id_consulta` | `CASCADE` | `CASCADE` | Dependência de existência da entidade fraca: removida a consulta, removem-se os seus itens |
-| `CONSULTA_TRATAMENTO` | `id_tratamento` | `TRATAMENTO` | `id_tratamento` | `CASCADE` | `RESTRICT` | Impede remover do catálogo tratamentos já aplicados em consultas anteriores |
+## 5. Restrições CHECK
 
----
+As 16 restrições CHECK nomeadas no esquema são:
 
-## 4. Diagrama Textual de Dependências Referenciais
+| Nome | Tabela | Regra |
+|---|---|---|
+| `ck_dono_nuit` | `DONO` | `nuit REGEXP '^[0-9]{9}$'` |
+| `ck_dono_telefone` | `DONO` | `telefone REGEXP '^[+]258 8[2-7] [0-9]{3} [0-9]{4}$'` |
+| `ck_veterinario_nuit` | `VETERINARIO` | `nuit REGEXP '^[0-9]{9}$'` |
+| `ck_veterinario_telefone` | `VETERINARIO` | `telefone REGEXP '^[+]258 8[2-7] [0-9]{3} [0-9]{4}$'` |
+| `ck_tratamento_preco_base` | `TRATAMENTO` | `preco_base >= 0` |
+| `ck_tratamento_duracao` | `TRATAMENTO` | `duracao_minutos > 0` |
+| `ck_animal_sexo` | `ANIMAL` | `sexo IN ('Macho', 'Fêmea')` |
+| `ck_animal_peso` | `ANIMAL` | `peso_kg > 0` |
+| `ck_consulta_estado` | `CONSULTA` | `estado IN ('Agendada', 'Concluída', 'Cancelada')` |
+| `ck_consulta_valor` | `CONSULTA` | `valor_consulta >= 0` |
+| `ck_ct_quantidade` | `CONSULTA_TRATAMENTO` | `quantidade > 0` |
+| `ck_ct_preco_aplicado` | `CONSULTA_TRATAMENTO` | `preco_aplicado >= 0` |
+| `ck_vacinacao_dose` | `VACINACAO` | `numero_dose > 0` |
+| `ck_utilizador_perfil` | `UTILIZADOR` | `perfil IN ('Administrador', 'Veterinario', 'Dono')` |
+| `ck_utilizador_ativo` | `UTILIZADOR` | `ativo IN (0, 1)` |
+| `ck_utilizador_vinculo` | `UTILIZADOR` | Coerência do perfil com os vínculos `id_dono` e `id_veterinario`, conforme a secção 4. |
+
+O MySQL só aplica CHECK a partir da versão 8.0.16.
+
+## 6. Diagrama de dependências e ordem operacional
 
 ```text
-+---------------+
-|     DONO      |
-|  id_dono (PK) |
-+---------------+
-        ^
-        |  id_dono (FK - ON DELETE RESTRICT)
-        |
-+---------------+          +----------------------+
-|    ANIMAL     |          |     VETERINARIO      |
-|id_animal (PK) |          | id_veterinario (PK)  |
-+---------------+          +----------------------+
-        ^                             ^
-        | id_animal (FK)              | id_veterinario (FK)
-        | (ON DELETE RESTRICT)        | (ON DELETE RESTRICT)
-        +--------------+--------------+
-                       |
-               +---------------+                        +--------------------+
-               |   CONSULTA    |                        |     TRATAMENTO     |
-               |id_consulta(PK)|                        | id_tratamento (PK) |
-               +---------------+                        +--------------------+
-                       ^                                          ^
-                       | id_consulta (PK, FK)                     | id_tratamento (PK, FK)
-                       | (ON DELETE CASCADE)                      | (ON DELETE RESTRICT)
-                       +--------------------+---------------------+
-                                            |
-                             +-------------------------------+
-                             |     CONSULTA_TRATAMENTO       |
-                             | (id_consulta, id_tratamento)  |
-                             +-------------------------------+
+DONO ──< ANIMAL ──< CONSULTA >── VETERINARIO
+  │          │          │              │
+  │          │          └──< CONSULTA_TRATAMENTO >── TRATAMENTO
+  │          │
+  │          └──< VACINACAO >────────────────────── VETERINARIO
+  │
+  └──< UTILIZADOR >──────────────────────────────── VETERINARIO
+       (vínculos opcionais; CHECK define o perfil)
 
-Ordem obrigatória de CRIAÇÃO / INSERÇÃO:
-  1. DONO  ->  2. VETERINARIO  ->  3. TRATAMENTO  ->  4. ANIMAL  ->  5. CONSULTA  ->  6. CONSULTA_TRATAMENTO
-
-Ordem segura de ELIMINAÇÃO (inversa às dependências):
-  1. CONSULTA_TRATAMENTO  ->  2. CONSULTA  ->  3. ANIMAL  ->  4. TRATAMENTO / VETERINARIO / DONO
+Legenda: A ──< B significa que B possui FK para A.
 ```
+
+**Ordem de criação** (pais antes de filhas; entre pais independentes, a ordem é livre):
+1. `DONO`, `VETERINARIO`, `TRATAMENTO`.
+2. `ANIMAL`, `UTILIZADOR`.
+3. `CONSULTA`, `VACINACAO`.
+4. `CONSULTA_TRATAMENTO`.
+
+**Ordem de inserção**: inserir primeiro em `DONO`, `VETERINARIO` e `TRATAMENTO`; depois em `ANIMAL` e `UTILIZADOR`; depois em `CONSULTA` e `VACINACAO`; por fim em `CONSULTA_TRATAMENTO`. Para `UTILIZADOR`, os registos de `DONO`/`VETERINARIO` referidos têm de existir. As relações entre pares do mesmo nível não impõem uma ordem entre si.
+
+**Ordem segura de eliminação** (filhas antes dos pais; alguns registos dependentes de `ANIMAL` são eliminados por CASCADE):
+1. `CONSULTA_TRATAMENTO` e `VACINACAO`.
+2. `CONSULTA`, `UTILIZADOR` e `ANIMAL`.
+3. `TRATAMENTO`, `VETERINARIO` e `DONO`.
+
+## 7. O que mudou em relação à versão anterior
+
+A versão anterior documentava seis tabelas. O esquema actual tem oito: foram acrescentadas `VACINACAO` e `UTILIZADOR`. `VACINACAO` separa o boletim vacinal do registo geral de tratamentos e representa correctamente uma entidade fraca, identificada por `(id_animal, numero_dose)` e dependente do animal. `UTILIZADOR` acrescenta as contas de acesso à aplicação, com perfis, vínculos opcionais a donos ou veterinários, hash de palavra-passe e estado da conta. Também foi clarificada a classificação de `CONSULTA_TRATAMENTO`: é entidade associativa para resolver a relação N:N, não a entidade fraca do modelo.
