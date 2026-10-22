@@ -1,0 +1,124 @@
+erDiagram
+    %% ============================================================
+    %% Diagrama Entidade-Relacionamento - Clínica Veterinária
+    %% Base de dados: clinica_vet (MySQL 8) | Autor: Kevin Muerembe
+    %% Ficheiro: diagrama_er.mmd (Mermaid erDiagram)
+    %% Os atributos, tipos e chaves reproduzem o ficheiro
+    %% 01_criacao_e_insercao.sql.
+    %% ---
+    %% Leitura das relações:
+    %% linha contínua (--) = relacionamento identificador
+    %% linha tracejada (..) = relacionamento não identificador
+    %% Os pares (min,max) nos rótulos seguem a ordem das entidades
+    %% na linha e indicam quantas vezes cada ocorrência dessa
+    %% entidade participa na relação (participação e cardinalidade).
+    %% ---
+    %% VACINACAO é uma ENTIDADE FRACA: não tem chave própria; é
+    %% identificada por (id_animal, numero_dose), em que
+    %% numero_dose é a chave parcial (discriminador) dentro de
+    %% cada animal. O seu relacionamento com ANIMAL é
+    %% identificador (linha contínua).
+    %% CONSULTA_TRATAMENTO é uma ENTIDADE ASSOCIATIVA: decompõe a
+    %% relação N:N entre CONSULTA e TRATAMENTO e guarda atributos
+    %% próprios dessa associação (quantidade, preco_aplicado,
+    %% observacoes).
+    %% ============================================================
+
+    DONO {
+        INT id_dono PK
+        VARCHAR(100) nome
+        VARCHAR(9) nuit UK "9 dígitos"
+        VARCHAR(20) telefone
+        VARCHAR(100) email UK
+        VARCHAR(150) morada
+        DATE data_registo
+    }
+
+    VETERINARIO {
+        INT id_veterinario PK
+        VARCHAR(100) nome
+        VARCHAR(9) nuit UK "9 dígitos"
+        VARCHAR(20) numero_registo_profissional UK
+        VARCHAR(60) especialidade
+        VARCHAR(20) telefone
+        VARCHAR(100) email UK
+        DATE data_contratacao
+    }
+
+    TRATAMENTO {
+        INT id_tratamento PK
+        VARCHAR(100) nome UK
+        VARCHAR(50) categoria
+        TEXT descricao
+        DECIMAL(8,2) preco_base "em MZN"
+        INT duracao_minutos
+    }
+
+    ANIMAL {
+        INT id_animal PK
+        VARCHAR(60) nome
+        VARCHAR(40) especie
+        VARCHAR(60) raca
+        VARCHAR(10) sexo "Macho ou Fêmea"
+        DATE data_nascimento
+        DECIMAL(8,2) peso_kg
+        VARCHAR(15) microchip UK "opcional"
+        INT id_dono FK
+    }
+
+    CONSULTA {
+        INT id_consulta PK
+        DATETIME data_hora
+        VARCHAR(150) motivo
+        TEXT diagnostico "opcional"
+        VARCHAR(20) estado "Agendada, Concluída ou Cancelada"
+        DECIMAL(8,2) valor_consulta "em MZN"
+        INT id_animal FK
+        INT id_veterinario FK
+    }
+
+    %% CONSULTA_TRATAMENTO: entidade associativa (resolve a relação
+    %% N:N entre CONSULTA e TRATAMENTO, com atributos próprios).
+    CONSULTA_TRATAMENTO {
+        INT id_consulta PK, FK
+        INT id_tratamento PK, FK
+        INT quantidade
+        DECIMAL(8,2) preco_aplicado "em MZN"
+        TEXT observacoes "opcional"
+    }
+
+    %% VACINACAO: entidade fraca (sem chave própria; identificada
+    %% por id_animal + numero_dose, a sua chave parcial).
+    VACINACAO {
+        INT id_animal PK, FK
+        INT numero_dose PK "chave parcial"
+        DATE data_aplicacao
+        VARCHAR(100) vacina
+        VARCHAR(20) lote
+        INT id_veterinario FK
+    }
+
+    UTILIZADOR {
+        INT id_utilizador PK
+        VARCHAR(100) email UK "login"
+        VARCHAR(100) password_hash
+        VARCHAR(20) perfil "Administrador, Veterinario ou Dono"
+        INT id_dono FK, UK "apenas perfil Dono"
+        INT id_veterinario FK, UK "apenas perfil Veterinario"
+        TINYINT(1) ativo "0 ou 1"
+        DATETIME ultimo_login "opcional"
+    }
+
+    %% Relacionamentos não identificadores (linha tracejada: ..)
+    DONO ||..o{ ANIMAL : "possui (0,N):(1,1)"
+    ANIMAL ||..o{ CONSULTA : "tem (0,N):(1,1)"
+    VETERINARIO ||..o{ CONSULTA : "realiza (0,N):(1,1)"
+    CONSULTA ||..o{ CONSULTA_TRATAMENTO : "inclui (0,N):(1,1)"
+    TRATAMENTO ||..o{ CONSULTA_TRATAMENTO : "aplicado em (0,N):(1,1)"
+    VETERINARIO ||..o{ VACINACAO : "administra (0,N):(1,1)"
+    DONO |o..o| UTILIZADOR : "tem conta (0,1):(0,1)"
+    VETERINARIO |o..o| UTILIZADOR : "tem conta (0,1):(0,1)"
+
+    %% Relacionamento identificador (linha contínua: --)
+    %% VACINACAO (entidade fraca) depende de ANIMAL para existir.
+    ANIMAL ||--o{ VACINACAO : "recebe (0,N):(1,1)"
