@@ -5,6 +5,9 @@
 -- SGBD: MySQL 8.0+
 -- DESCRIÇÃO: Criação de raiz da base de dados, das 6 tabelas com restrições
 --            de integridade e inserção de exatamente 20 registos por tabela.
+-- MOEDA:     Todos os valores monetários (preco_base, valor_consulta e
+--            preco_aplicado) estão expressos em meticais moçambicanos (MZN).
+--            Exemplo: preço da consulta = 500 MZN.
 -- =========================================================================
 
 -- Remover a base de dados caso já exista, garantindo execução limpa de raiz
@@ -68,7 +71,7 @@ CREATE TABLE TRATAMENTO (
     nome VARCHAR(100) NOT NULL,
     categoria VARCHAR(50) NOT NULL,
     descricao TEXT NOT NULL,
-    preco_base DECIMAL(8,2) NOT NULL,
+    preco_base DECIMAL(8,2) NOT NULL COMMENT 'Preço base da tabela em meticais moçambicanos (MZN)',
     duracao_minutos INT NOT NULL,
     CONSTRAINT pk_tratamento PRIMARY KEY (id_tratamento),
     CONSTRAINT uq_tratamento_nome UNIQUE (nome)
@@ -108,7 +111,7 @@ CREATE TABLE CONSULTA (
     motivo VARCHAR(150) NOT NULL,
     diagnostico TEXT,
     estado VARCHAR(20) NOT NULL,
-    valor_consulta DECIMAL(8,2) NOT NULL,
+    valor_consulta DECIMAL(8,2) NOT NULL COMMENT 'Valor da consulta em meticais moçambicanos (MZN)',
     id_animal INT NOT NULL,
     id_veterinario INT NOT NULL,
     CONSTRAINT pk_consulta PRIMARY KEY (id_consulta),
@@ -133,7 +136,7 @@ CREATE TABLE CONSULTA_TRATAMENTO (
     id_consulta INT NOT NULL,
     id_tratamento INT NOT NULL,
     quantidade INT NOT NULL,
-    preco_aplicado DECIMAL(8,2) NOT NULL,
+    preco_aplicado DECIMAL(8,2) NOT NULL COMMENT 'Preço aplicado em meticais moçambicanos (MZN)',
     observacoes TEXT,
     CONSTRAINT pk_consulta_tratamento PRIMARY KEY (id_consulta, id_tratamento),
     CONSTRAINT fk_ct_consulta FOREIGN KEY (id_consulta)
